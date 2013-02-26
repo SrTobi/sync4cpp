@@ -12,17 +12,18 @@ find_package(Boost COMPONENTS system thread unit_test_framework REQUIRED)
 #link_directories(${Boost_LIBRARY_DIRS})
 
 file(GLOB include_files 		${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
-file(GLOB test_sources 			${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-file(GLOB tests_sources 		${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
+file(GLOB sources_files 		${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+file(GLOB tests_files 			${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
 
 
 source_group("includes" FILES ${include_files})
-source_group("source" FILES ${test_sources})
-source_group("source\\tests" FILES ${tests_sources})
+source_group("source" FILES ${sources_files})
+source_group("tests" FILES ${tests_files})
 
 include_directories(include ${Boost_INCLUDE_DIRS})
 
-add_executable(sync4cpp-tests 		${test_sources} ${include_files} ${tests_sources})
+add_executable(sync4cpp		 		${include_files} ${sources_files})
+add_executable(sync4cpp-tests 		${include_files} ${tests_files})
 
 ADD_DEFINITIONS("-std=c++0x")
 
