@@ -39,6 +39,12 @@
 
 
 namespace sync4cpp {
+namespace traits {
+
+	struct Modifier;
+	template<typename Tag, typename Dummy>
+	struct defaults;
+}
 
 namespace detail {
 
@@ -48,36 +54,53 @@ namespace detail {
 	typedef Nil unused_type;
 
 
-	template<typename Mutex, bool WasRef, typename Params>
-	struct mutex_operation
+	template<typename Mutex, typename Params>
+	struct mutex_assignment
 	{
 		typedef Mutex mutex_type;
 		typedef Params params_type;
 
-		mutex_operation(mutex_type& mutex, const params_type& params)
+		mutex_assignment(mutex_type* const mutex, const params_type& params)
 			: mutex(mutex)
 			, params(params)
 		{
 		}
 
-		mutex_type& mutex;
+		mutex_type* const mutex;
 		params_type params;
 	};
 
-	template<typename Tag, typename P1 = unused_type, typename P2 = unused_type, typename  = unused_type, typename P4 = unused_type>
+	template<	typename Tag,
+				typename P1 = unused_type,
+				typename P2 = unused_type,
+				typename P3 = unused_type,
+				typename P4 = unused_type,
+				typename P5 = unused_type,
+				typename P6 = unused_type>
 	struct mutex_modifier
 	{
 		typedef Tag									tag_type;
 		typedef std::tuple<P1, P2, P3, P4, P5, P6>	value_type;
 
 		template<typename Mutex>
-		mutex_operation<Mutex, value_type> operator [](Mutex& mutex) const
+		struct assignment { typedef mutex_assignment<Mutex, value_type> type; };
+		template<typename Mutex>
+		struct assignment<Mutex* const> { typedef mutex_assignment<Mutex* const, value_type> type; };
+
+		template<typename Mutex>
+		typename assignment<Mutex>::type operator [](Mutex& mutex) const
 		{
-			return mutex_operation<Mutex, value_type>(mutex, value);
+			return assignment<Mutex>::type(&mutex, value);
+		}
+
+		template<typename Mutex>
+		typename assignment<Mutex>::type operator [](Mutex* const mutex) const
+		{
+			return assignment<Mutex>::type(&mutex, value);
 		}
 
 		template<std::size_t Index>
-		const std::tuple_element<Index, value_type>::type& get() const
+		const typename std::tuple_element<Index, value_type>::type& get() const
 		{
 			return std::get<Index>(value);
 		}
@@ -90,24 +113,55 @@ namespace detail {
 	private:
 		const value_type value;
 	};
+
+	template<typename Operation>
+	struct resolve_guard_impl
+	{
+		typedef typename traits::defaults<traits::Modifier, Operation>::type	modifier_type;
+		typedef typename modifier_type::template assignment<Operation>::type	assignment_type;
+		typedef typename resolve_guard_impl<assignment_type>::type				type;
+	};
+
+	template<typename Mutex, typename Params>
+	struct resolve_guard_impl< mutex_assignment<Mutex, Params> >
+	{
+		typedef void type;
+	};
 }
 
+// No parameter modifier
+template<typename Tag>
+struct mutex_modifier
+	: public detail::mutex_modifier<Tag>
+{
+
+};
+
+typedef mutex_modifier<struct ExclusiveModifierTag>	exclusive;
+typedef mutex_modifier<struct SharedModifierTag>	shared;
+
+
+template<typename Operation>
+struct resolve_guard
+{
+	typedef typename detail::resolve_guard_impl<Operation>::type type;
+};
+
+
+/********************************** default settings **********************************************/
 namespace traits {
 
-	template<typename T = void>
+	template<typename Tag, typename Dummy>
 	struct defaults
 	{
 	};
 
-
-	// No parameter modifier
-	template<typename Tag>
-	struct mutex_modifier
-		: public detail::mutex_modifier<Tag>
+	template<typename Dummy>
+	struct defaults<traits::Modifier, Dummy>
 	{
-
+		typedef sync4cpp::exclusive type;
 	};
-	
+
 }
 
 }
