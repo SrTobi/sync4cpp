@@ -8,10 +8,27 @@
 
 using namespace std;
 
+typedef std::true_type dd;
+
+
+
+struct xxx
+{
+	xxx(int i)
+		: i(i)
+	{}
+
+
+
+	int i;
+};
+
 
 int main()
 {
+	auto x = xxx(5);
 
+	cout << x.i;
 
 	std::cin.get();
 	return 0;
