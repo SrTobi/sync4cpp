@@ -244,6 +244,7 @@ namespace detail {
 	template<typename Mutex>
 	struct resolve_guard_impl
 	{
+
 		typedef typename std::conditional
 			< // if 'Mutex' is registered
 				is_registered_mutex<Mutex>::value
@@ -316,7 +317,7 @@ struct is_decorated
 template<typename Type>
 struct get_decor_tag
 {
-	typedef detail::get_decor_tag_impl<Type>::type type;
+	typedef typename detail::get_decor_tag_impl<Type>::type type;
 };
 
 
