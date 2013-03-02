@@ -8,27 +8,30 @@
 
 using namespace std;
 
-typedef std::true_type dd;
 
 
-
-struct xxx
+struct test
 {
-	xxx(int i)
-		: i(i)
-	{}
 
-
-
-	int i;
 };
+
+struct test_guard
+{
+	test_guard(test&){}
+	~test_guard() {}
+};
+
+
+
+SYNC4CPP_REGISTER_MUTEX(test);
+SYNC4CPP_REGISTER_GUARD(test, sync4cpp::exclusive, test_guard);
+SYNC4CPP_SET_DEFAULT_GUARD(test, test_guard);
 
 
 int main()
 {
-	auto x = xxx(5);
-
-	cout << x.i;
+	test mutex;
+	sync4cpp::guard<test>::type guard(mutex);
 
 	std::cin.get();
 	return 0;

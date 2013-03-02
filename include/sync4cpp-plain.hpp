@@ -33,6 +33,9 @@
  *
  *	}
  *
+ *	- native guard
+ *	- split assignment guard
+ *	- (raw mutex to assignment) guard
  *
  *
  **/
@@ -41,9 +44,7 @@
 /********************* Declarations **********************/
 namespace sync4cpp {
 namespace traits {
-	struct Modifier;
-	template<typename Tag, typename Dummy = void>
-	struct defaults;
+	struct default_modifier;
 
 	template<typename Mutex>
 	struct mutex_registry;
@@ -90,10 +91,10 @@ namespace traits {
 		typedef std::false_type found;
 		typedef void			default_operation;
 
-		template<typename Operation>
+		template<typename Modifier>
 		struct guard
 		{
-			typedef std::false_type has;
+			typedef void guard_type;
 		};
 	};
 
@@ -108,10 +109,7 @@ struct decor
 
 namespace detail {
 
-	struct Nil
-	{};
-
-	typedef Nil unused_type;
+	struct unused_type {};
 
 	template<bool Value>
 	struct bool_base : public std::false_type
@@ -220,48 +218,24 @@ namespace detail {
 		typedef decltype(_resolveTag(*type_ptr())) type;
 	};
 
-	template<typename Type>
-	struct is_registered_mutex_impl
+	template<typename Mutex, typename Modifier>
+	struct search_registry_impl
 	{
-		typedef typename traits::mutex_registry<Type>::found found_type;
-		typedef typename found_type::value value;
-	};
-
-	template<typename Mutex, typename Modifier = traits::mutex_registry<Mutex>::default_operation>
-	struct has_guard_impl
-	{
-		static_assert(is_registered_mutex<Mutex>::value, "'Mutex' is not a registered mutex!");
-		typedef typename traits::mutex_registry<Mutex>::template guard<Modifier>::has::value value;
-	};
-
-	template<typename Mutex, typename Modifier = traits::mutex_registry<Mutex>::default_operation>
-	struct get_guard_impl
-	{
-		static_assert(is_registered_mutex<Mutex>::value, "'Mutex' is not a registered mutex!");
-		typedef typename traits::mutex_registry<Mutex>::template guard<Modifier>::type type;
-	};
-
-	template<typename Mutex>
-	struct resolve_guard_impl
-	{
-
+		typedef typename traits::mutex_registry<Mutex>::found found_mutex;
 		typedef typename std::conditional
-			< // if 'Mutex' is registered
-				is_registered_mutex<Mutex>::value
+			< // if 'Mutex' was registered
+				found_mutex::value
 			, // then
-				typename get_guard_impl<Mutex, typename traits::defaults<traits::Modifier, Mutex>::type>::type
+				traits::mutex_registry<Mutex>
 			, // else
-				typename std::conditional
-				< // if decorated
-					is_decorated<Mutex>::value
-				, // then
-					void
-				, // else
-					void
-				>::type
-			>::type type;
+				void
+			>::type entry_type;
 
-		static_assert(std::is_void<type>::value, "Can not determinate a guard to given Mutex!");
+		typedef typename entry_type::template guard<Modifier>::guard_type guard_type;
+
+		typedef std::is_void<guard_type> found_guard;
+
+		//static_assert(std::is_void<type>::value, "Can not determinate a guard to given Mutex!");
 
 
 		//typedef typename traits::defaults<traits::Modifier, Operation>::type	modifier_type;
@@ -269,17 +243,23 @@ namespace detail {
 		//typedef typename resolve_guard_impl<assignment_type>::type				type;
 	};
 
-	template<typename Mutex, typename Params>
-	struct resolve_guard_impl< mutex_assignment<Mutex, Params> >
+
+	template<typename Mutex>
+	struct resolve_guard_impl
 	{
-		typedef void type;
+		static_assert(is_registered_mutex<Mutex>::value, "'Mutex' is not a registered mutex!");
+		typedef typename search_registry_impl<Mutex, traits::default_modifier>::guard_type guard_type;
+		static_assert(!std::is_void<guard_type>::value, "No default guard set for 'Mutex'!");
 	};
 
-	template<typename Tag>
-	struct resolve_guard_impl< sync4cpp::decor<Tag> >
+	template<typename Mutex, typename Modifier>
+	struct resolve_guard_impl< mutex_assignment<Mutex, Modifier> >
 	{
-		static_assert(sizeof(Tag) != sizeof(Tag), "You can not resolve a decor directly!");
+		static_assert(is_registered_mutex<Mutex>::value, "'Mutex' is not a registered mutex!");
+		typedef typename search_registry_impl<Mutex, Modifier>::guard_type guard_type;
+		static_assert(!std::is_void<guard_type>::value, "No guard set for 'Mutex' and 'Modifier'!");
 	};
+
 }
 
 // No parameter modifier
@@ -294,15 +274,9 @@ typedef mutex_modifier<struct ExclusiveModifierTag>	exclusive;
 typedef mutex_modifier<struct SharedModifierTag>	shared;
 
 
-template<typename Operation>
-struct resolve_guard
-{
-	typedef typename detail::resolve_guard_impl<Operation>::type type;
-};
-
 template<typename Type>
 struct is_registered_mutex
-	: public detail::bool_base<detail::is_registered_mutex_impl<Type>::value>
+	: public detail::bool_base<detail::search_registry_impl<Type, void>::found_mutex::value>
 {
 };
 
@@ -320,11 +294,18 @@ struct get_decor_tag
 	typedef typename detail::get_decor_tag_impl<Type>::type type;
 };
 
+template<typename Mutex>
+struct guard
+{
+	typedef typename detail::resolve_guard_impl<Mutex>::guard_type type;
+	//typedef detail::resolve_guard_impl<Mutex>::type type;
+};
+
 
 /********************************** default settings **********************************************/
 namespace traits {
 
-	template<typename Tag, typename Dummy>
+	/*template<typename Tag, typename Dummy>
 	struct defaults
 	{
 	};
@@ -333,11 +314,46 @@ namespace traits {
 	struct defaults<traits::Modifier, Dummy>
 	{
 		typedef sync4cpp::exclusive type;
-	};
+	};*/
 
 }
 
 }
+
+/********************************** definitions **********************************************/
+
+#define SYNC4CPP_REGISTER_MUTEX(_mutex)			\
+		namespace sync4cpp { namespace traits {	\
+			template<>							\
+			struct mutex_registry<_mutex>		\
+			{									\
+				typedef std::true_type found;	\
+				template<typename Modifier>		\
+				struct guard					\
+				{								\
+					typedef void guard_type;	\
+				};								\
+			};									\
+		}}
+
+#define SYNC4CPP_REGISTER_GUARD(_mutex, _modifier, _guard)	\
+		namespace sync4cpp { namespace traits {				\
+			template<>										\
+			struct mutex_registry<_mutex>::guard<_modifier>	\
+			{												\
+				typedef _guard guard_type;					\
+			};												\
+		}}
+
+#define SYNC4CPP_SET_DEFAULT_GUARD(_mutex, _guard)			\
+		namespace sync4cpp { namespace traits {				\
+			template<>										\
+			struct mutex_registry<_mutex>::guard<sync4cpp::traits::default_modifier>	\
+			{												\
+				typedef _guard guard_type;					\
+			};												\
+		}}
+
 
 //#define syncuse(_op, ...)		auto pair##_op  auto& _op
 // syncuse(mLocked) syncuse(lock = mLocked)
