@@ -178,8 +178,7 @@ namespace detail {
 		static const typename std::tuple_element<MapIndex, typename Assignment::params_type>::type& get(const Assignment& as)
 		{
 			static_assert(!std::is_same<typename std::tuple_element<MapIndex, typename Assignment::params_type>::type, unused_type>::value, "Parameter with this Index is not used in the Modifier!");
-			auto x = as.params;
-			return std::get<MapIndex>(x);
+			return std::get<MapIndex>(as.params);
 		}
 	};
 
