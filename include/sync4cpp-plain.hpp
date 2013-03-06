@@ -61,8 +61,7 @@ template<	typename Tag,
 			typename P2 = detail::unused_type,
 			typename P3 = detail::unused_type,
 			typename P4 = detail::unused_type,
-			typename P5 = detail::unused_type,
-			typename P6 = detail::unused_type>
+			typename P5 = detail::unused_type>
 struct mutex_modifier;
 
 template<typename Type>
@@ -146,10 +145,10 @@ namespace detail {
 	};
 
 
-	template<typename Mutex, typename Tag, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
-	struct mutex_assignment<Mutex, mutex_modifier<Tag, P1, P2, P3, P4, P5, P6> >
+	template<typename Mutex, typename Tag, typename P1, typename P2, typename P3, typename P4, typename P5>
+	struct mutex_assignment<Mutex, mutex_modifier<Tag, P1, P2, P3, P4, P5> >
 	{
-		typedef mutex_modifier<Tag, P1, P2, P3, P4, P5, P6> modifier_type;
+		typedef mutex_modifier<Tag, P1, P2, P3, P4, P5> modifier_type;
 		typedef Mutex										mutex_type;
 		typedef typename modifier_type::value_type			params_type;
 
@@ -343,11 +342,11 @@ namespace detail {
 	*/
 }
 
-template<typename Tag, typename P1, typename P2, typename P3, typename P4, typename P5, typename P6>
+template<typename Tag, typename P1, typename P2, typename P3, typename P4, typename P5>
 struct mutex_modifier
 {
 	typedef Tag									tag_type;
-	typedef std::tuple<P1, P2, P3, P4, P5, P6>	value_type;
+	typedef std::tuple<P1, P2, P3, P4, P5>	value_type;
 	typedef mutex_modifier						this_type;
 
 	template<typename Mutex>
@@ -373,8 +372,8 @@ struct mutex_modifier
 		return std::get<Index>(value);
 	}
 
-	mutex_modifier(const P1& p1 = P1(), const P2& p2 = P2(), const P3& p3 = P3(), const P4& p4 = P4(), const P5& p5 = P5(), const P6& p6 = P6())
-		: value(p1, p2, p3, p4, p5, p6)
+	mutex_modifier(const P1& p1 = P1(), const P2& p2 = P2(), const P3& p3 = P3(), const P4& p4 = P4(), const P5& p5 = P5())
+		: value(p1, p2, p3, p4, p5)
 	{
 	}
 

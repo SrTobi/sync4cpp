@@ -28,7 +28,7 @@ SYNC4CPP_REGISTER_MUTEX(test*);
 SYNC4CPP_REGISTER_GUARD(test*, testm, test_guard, sync4cpp::map_mutex, sync4cpp::map<0>);
 SYNC4CPP_SET_DEFAULT_GUARD(test*, test_guard);
 
-static testm ex(5);
+static testm ex(9);
 int main()
 {
 	//static_assert(std::is_same<typename sync4cpp::traits::mutex_registry<test*>::template guard<sync4cpp::exclusive>::guard_type, test_guard>::value, "!!!!!!!!!!!!!!!!!!!!!!!");
