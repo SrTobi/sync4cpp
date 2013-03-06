@@ -9,6 +9,7 @@
 using namespace std;
 
 
+typedef sync4cpp::mutex_modifier<struct testmTag, int> testm;
 
 struct test
 {
@@ -17,21 +18,24 @@ struct test
 
 struct test_guard
 {
-	test_guard(test&){}
-	~test_guard() {}
+	test_guard(test*, int i){cout << "in\n" << i;}
+	~test_guard() {cout << "out\n";}
 };
 
 
 
-SYNC4CPP_REGISTER_MUTEX(test);
-SYNC4CPP_REGISTER_GUARD(test, sync4cpp::exclusive, test_guard);
-SYNC4CPP_SET_DEFAULT_GUARD(test, test_guard);
+SYNC4CPP_REGISTER_MUTEX(test*);
+SYNC4CPP_REGISTER_GUARD(test*, testm, test_guard, sync4cpp::map_mutex, sync4cpp::map<0>);
+SYNC4CPP_SET_DEFAULT_GUARD(test*, test_guard);
 
-
+static testm ex(5);
 int main()
 {
-	test mutex;
-	sync4cpp::guard<test>::type guard(mutex);
+	//static_assert(std::is_same<typename sync4cpp::traits::mutex_registry<test*>::template guard<sync4cpp::exclusive>::guard_type, test_guard>::value, "!!!!!!!!!!!!!!!!!!!!!!!");
+	test* mutex  =0;
+	{
+		sync4cpp::guard<decltype(ex[mutex])>::type guard(ex[mutex]);
+	}
 
 	std::cin.get();
 	return 0;
