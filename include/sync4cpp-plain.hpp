@@ -185,7 +185,7 @@ namespace detail {
 	struct get_from_mapping_impl< sync4cpp::val<Type, Value> >
 	{
 		template<typename Assignment>
-		static const Type& get(const Assignment& as)
+		static const Type&& get(const Assignment& as)
 		{
 			return Value;
 		}
@@ -355,13 +355,13 @@ struct mutex_modifier
 	struct assignment<Mutex*> { typedef detail::mutex_assignment<Mutex*, this_type> type; };
 
 	template<typename Mutex>
-	typename assignment<Mutex>::type operator [](Mutex& mutex) const
+	typename assignment<Mutex>::type operator <<(Mutex& mutex) const
 	{
 		return assignment<Mutex>::type(&mutex, value);
 	}
 
 	template<typename Mutex>
-	typename assignment<Mutex*>::type operator [](Mutex* mutex) const
+	typename assignment<Mutex*>::type operator <<(Mutex* mutex) const
 	{
 		return typename assignment<Mutex*>::type(&mutex, value);
 	}
