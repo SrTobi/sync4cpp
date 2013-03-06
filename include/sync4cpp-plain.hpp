@@ -52,6 +52,7 @@ namespace traits {
 
 namespace detail {
 
+	struct unused_type;
 
 }
 
@@ -378,7 +379,7 @@ struct mutex_modifier
 	template<typename Mutex>
 	typename assignment<Mutex*>::type operator [](Mutex* mutex) const
 	{
-		return assignment<Mutex*>::type(&mutex, value);
+		return typename assignment<Mutex*>::type(&mutex, value);
 	}
 
 	template<std::size_t Index>
