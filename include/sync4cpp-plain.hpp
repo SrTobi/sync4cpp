@@ -258,20 +258,6 @@ namespace detail {
 		typedef decltype(_resolveTag(*type_ptr())) type;
 	};
 
-	template<typename Mutex, typename Parent>
-	struct dereference_wrapper_guard
-		: public Parent
-	{
-		dereference_wrapper_guard(Mutex* mutex)
-			: Parent(*mutex)
-		{
-			assert(mutex);
-		}
-
-		~dereference_wrapper_guard()
-		{
-		}
-	};
 
 	template<typename Type>
 	struct is_registered_impl
