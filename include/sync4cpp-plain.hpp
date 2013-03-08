@@ -44,8 +44,6 @@
 /********************* Declarations **********************/
 namespace sync4cpp {
 namespace traits {
-	struct default_modifier;
-
 	template<typename Mutex>
 	struct mutex_registry;
 }
@@ -116,6 +114,16 @@ namespace traits {
 		};
 	};
 
+
+	template<typename Mutex>
+	struct default_modifier
+	{
+		typedef void type;
+		static void inst()
+		{
+			//static_assert(sizeof(Mutex) != sizeof(Mutex), "Not standard modifier for 'Mutex' set.");
+		}
+	};
 }
 
 	
@@ -303,9 +311,14 @@ namespace detail {
 	template<typename Mutex>
 	struct resolve_guard_impl
 	{
-		static_assert(is_registered_mutex<Mutex>::value, "'Mutex' is not a registered mutex!");
-		typedef typename search_registry_impl<Mutex, traits::default_modifier>::guard_type guard_type;
-		static_assert(!std::is_void<guard_type>::value, "No default guard set for 'Mutex'!");
+		typedef typename traits::default_modifier<Mutex>::type modifier_type;
+		static_assert(!std::is_void<modifier_type>::value, "Not standard modifier for 'Mutex' set.");
+		typedef typename resolve_guard_impl< mutex_assignment<Mutex, modifier_type> >::guard_type base_guard;
+		typedef struct modify_wrapper: public base_guard
+		{
+			modify_wrapper(Mutex& mutex): base_guard(traits::default_modifier<Mutex>::inst() << mutex) {}
+			~modify_wrapper() {}
+		} guard_type;
 	};
 
 	template<typename Mutex, typename Modifier>
@@ -351,19 +364,11 @@ struct mutex_modifier
 
 	template<typename Mutex>
 	struct assignment { typedef detail::mutex_assignment<Mutex, this_type> type; };
-	template<typename Mutex>
-	struct assignment<Mutex*> { typedef detail::mutex_assignment<Mutex*, this_type> type; };
 
 	template<typename Mutex>
 	typename assignment<Mutex>::type operator <<(Mutex& mutex) const
 	{
 		return assignment<Mutex>::type(&mutex, value);
-	}
-
-	template<typename Mutex>
-	typename assignment<Mutex*>::type operator <<(Mutex* mutex) const
-	{
-		return typename assignment<Mutex*>::type(&mutex, value);
 	}
 
 	template<std::size_t Index>
@@ -458,13 +463,12 @@ namespace traits {
 			};												\
 		}}
 
-#define SYNC4CPP_SET_DEFAULT_GUARD(_mutex, _guard)			\
+#define SYNC4CPP_SET_DEFAULT_GUARD(_mutex, _modifier, ...)	\
 		namespace sync4cpp { namespace traits {				\
-			template<>										\
-			struct mutex_registry<_mutex>::guard<sync4cpp::traits::default_modifier>	\
+			template<> struct default_modifier<_mutex>		\
 			{												\
-				typedef _guard guard_type;					\
-				typedef void mapping;						\
+				typedef _modifier type;						\
+				static type inst() { return type(__VA_ARGS__); }	\
 			};												\
 		}}
 
