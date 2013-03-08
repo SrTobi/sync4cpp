@@ -65,6 +65,9 @@ struct mutex_modifier;
 template<typename Type>
 struct is_registered_mutex;
 
+template<typename Mutex, typename Modifier>
+struct has_registered_guard;
+
 template<typename Type>
 struct is_decorated;
 
@@ -254,13 +257,21 @@ namespace detail {
 	struct get_decor_tag_impl
 	{
 	private:
-		static_assert(is_decorated<Type>::value, "'Type' is not decorated!");
+		struct DummyTag
+		{
+			template<typename Mutex, typename Modifier>
+			struct guard
+			{
+				typedef void type;
+			};
+		};
 		static Type* type_ptr();
 
 		template<typename Tag>
 		static Tag _resolveTag(const sync4cpp::decor<Tag>&);
 		template<typename Tag>
 		static Tag _resolveTag(const sync4cpp::decor<Tag>* const);
+		static DummyTag _resolveTag(...);
 	public:
 		typedef decltype(_resolveTag(*type_ptr())) type;
 	};
@@ -276,19 +287,12 @@ namespace detail {
 	struct search_registry_impl
 	{
 		typedef typename traits::mutex_registry<Mutex>::found found_mutex;
-		typedef typename std::conditional
-			< // if 'Mutex' was registered
-				found_mutex::value
-			, // then
-				traits::mutex_registry<Mutex>
-			, // else
-				void
-			>::type entry_type;
+		typedef traits::mutex_registry<Mutex> entry_type;
 
 		typedef typename entry_type::template guard<Modifier> guard_entry;
 		typedef bool_base<!std::is_void<typename guard_entry::guard_type>::value> found_guard;
 
-		static_assert(found_guard::value, "Guard not found!");
+		//static_assert(found_guard::value, "Guard not found!");
 		typedef typename std::conditional
 			< // if the guard mapping is void
 				std::is_void<typename guard_entry::mapping>::value
@@ -312,7 +316,7 @@ namespace detail {
 	struct resolve_guard_impl
 	{
 		typedef typename traits::default_modifier<Mutex>::type modifier_type;
-		static_assert(!std::is_void<modifier_type>::value, "Not standard modifier for 'Mutex' set.");
+		static_assert(!std::is_void<modifier_type>::value, "No standard modifier for 'Mutex' set.");
 		typedef typename resolve_guard_impl< mutex_assignment<Mutex, modifier_type> >::guard_type base_guard;
 		typedef struct modify_wrapper: public base_guard
 		{
@@ -324,35 +328,27 @@ namespace detail {
 	template<typename Mutex, typename Modifier>
 	struct resolve_guard_impl< mutex_assignment<Mutex, Modifier> >
 	{
-		static_assert(is_registered_mutex<Mutex>::value, "'Mutex' is not a registered mutex!");
-		typedef typename search_registry_impl<Mutex, Modifier>::guard_type guard_type;
-		static_assert(!std::is_void<guard_type>::value, "No guard set for 'Mutex' and 'Modifier'!");
-	};
-	
-	/*template<typename Mutex>
-	struct resolve_guard_impl<Mutex*>
-	{
-		static_assert(is_registered_mutex<Mutex>::value || is_registered_mutex<Mutex*>::value, "'Mutex' or 'Mutex*' is not a registered mutex!");
+		//static_assert(is_registered_mutex<Mutex>::value, "'Mutex' is not a registered mutex!");
+		typedef search_registry_impl<Mutex, Modifier> serach_entry;
 
 		typedef typename std::conditional
-			< // if Mutex* is registered
-				is_registered_mutex<Mutex*>::value
+			< // if a mutex is registered and a guard can be found
+				is_registered_mutex<Mutex>::value && has_registered_guard<Mutex, Modifier>::value
 			, // then
-				typename resolve_guard_impl<Mutex*>::guard_type
+				typename serach_entry::guard_type
 			, // else
 				typename std::conditional
-				< // if Mutex is registered
-					is_registered_mutex<Mutex>::value
+				< // if Mute is decorated
+					is_decorated<Mutex>::value
 				, // then
-					dereference_wrapper_guard<Mutex, typename resolve_guard_impl<Mutex>::guard_type>
+					typename get_decor_tag_impl<Mutex>::type::template guard<Mutex, Modifier>::type
 				, // else
 					void
 				>::type
 			>::type guard_type;
-
-		static_assert(!std::is_void<guard_type>::value, "No default guard set for 'Mutex' or 'Mutex*'!");
+		static_assert(!std::is_void<guard_type>::value, "Was not able to resolve a guard for 'Mutex'!");
+		//static_assert(!std::is_void<guard_type>::value, "No guard set for 'Mutex' and 'Modifier'!");
 	};
-	*/
 }
 
 template<typename Tag, typename P1, typename P2, typename P3, typename P4, typename P5>
@@ -396,6 +392,12 @@ struct is_registered_mutex
 {
 };
 
+template<typename Mutex, typename Modifier>
+struct has_registered_guard
+	: public detail::bool_base<detail::search_registry_impl<Mutex, Modifier>::found_guard::value>::type
+{
+	//static_assert(is_registered_mutex<Mutex>::value, "'Mutex' is not a registered mutex!");
+};
 
 template<typename Type>
 struct is_decorated
@@ -407,6 +409,7 @@ struct is_decorated
 template<typename Type>
 struct get_decor_tag
 {
+	static_assert(is_decorated<Type>::value, "'Type' is not decorated!");
 	typedef typename detail::get_decor_tag_impl<Type>::type type;
 };
 
