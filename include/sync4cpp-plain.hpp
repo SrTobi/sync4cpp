@@ -196,7 +196,7 @@ namespace detail {
 	struct get_from_mapping_impl< sync4cpp::val<Type, Value> >
 	{
 		template<typename Assignment>
-		static const Type&& get(const Assignment& as)
+		static Type get(const Assignment& as)
 		{
 			return Value;
 		}
