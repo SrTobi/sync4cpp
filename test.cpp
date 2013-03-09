@@ -65,7 +65,8 @@ int main()
 	//static_assert(std::is_same<typename sync4cpp::traits::mutex_registry<test*>::template guard<sync4cpp::exclusive>::guard_type, test_guard>::value, "!!!!!!!!!!!!!!!!!!!!!!!");
 	decorated mutex;
 	{
-		auto guard = SYNC4CPP_SYNCGUARD(testm(5) << mutex);
+		SYNC4CPP_SYNCHERE(testm(1) << mutex, testm(2) << mutex);
+		//auto guard = SYNC4CPP_SYNCGUARD(testm(5) << mutex);
 	}
 
 	std::cin.get();
