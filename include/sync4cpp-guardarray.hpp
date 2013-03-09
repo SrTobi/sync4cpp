@@ -24,8 +24,8 @@ namespace detail {
 			inline operator unused_type&() { return unused; }
 		};
 
-		inline GuardArray(	T1& m1, T2& m2 = def<T2>(), T3& m3 = def<T3>(), T4& m4 = def<T4>(),
-							T5& m5 = def<T5>(), T6& m6 = def<T6>(), T7& m7 = def<T7>(), T8& m8 = def<T8>(), ...)
+		inline GuardArray(	T1& m1, T2& m2 = unused_inst, T3& m3 = unused_inst, T4& m4 = unused_inst,
+							T5& m5 = unused_inst, T6& m6 = unused_inst, T7& m7 = unused_inst, T8& m8 = unused_inst, ...)
 			: done(false)
 			, guard1(m1)
 			, guard2(m2)

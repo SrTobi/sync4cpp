@@ -145,9 +145,12 @@ namespace detail {
 
 	struct unused_guard
 	{
+		unused_guard() {}
 		unused_guard(unused_type&){}
 		~unused_guard(){}
 	};
+
+	static unused_type unused_inst;
 
 	template<bool Value>
 	struct bool_base : public std::false_type
