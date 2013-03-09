@@ -143,6 +143,12 @@ namespace detail {
 
 	struct unused_type {};
 
+	struct unused_guard
+	{
+		unused_guard(unused_type&){}
+		~unused_guard(){}
+	};
+
 	template<bool Value>
 	struct bool_base : public std::false_type
 	{};
@@ -201,7 +207,7 @@ namespace detail {
 	struct assignment_mapping_wrapper_guard<Assignment, Guard, Mapping, _count> : public Guard	\
 	{	assignment_mapping_wrapper_guard(const Assignment& as) : Guard(__VA_ARGS__){}	};
 #define MAPPING_GET(_index) get_from_mapping_impl<typename std::tuple_element<_index, Mapping>::type>::get(as)
-	MAKE_ASSIGNMENT_MAPPING_WRAPPER_GUARD_WITH_N_PARAMS(0, *as.mutex);
+	MAKE_ASSIGNMENT_MAPPING_WRAPPER_GUARD_WITH_N_PARAMS(0, as.mutex());
 	MAKE_ASSIGNMENT_MAPPING_WRAPPER_GUARD_WITH_N_PARAMS(1, MAPPING_GET(0));
 	MAKE_ASSIGNMENT_MAPPING_WRAPPER_GUARD_WITH_N_PARAMS(2, MAPPING_GET(0), MAPPING_GET(1));
 	MAKE_ASSIGNMENT_MAPPING_WRAPPER_GUARD_WITH_N_PARAMS(3, MAPPING_GET(0), MAPPING_GET(1), MAPPING_GET(2));
@@ -492,6 +498,9 @@ namespace traits {
 			};												\
 		}}
 
+SYNC4CPP_REGISTER_MUTEX(sync4cpp::detail::unused_type);
+SYNC4CPP_REGISTER_GUARD(sync4cpp::detail::unused_type, sync4cpp::exclusive, sync4cpp::detail::unused_guard);
+SYNC4CPP_SET_DEFAULT_GUARD(sync4cpp::detail::unused_type, sync4cpp::exclusive);
 
 //#define syncuse(_op, ...)		auto pair##_op  auto& _op
 // syncuse(mLocked) syncuse(lock = mLocked)
@@ -499,5 +508,7 @@ namespace traits {
 
 
 #define SYNC4CPP_SYNCGUARD(_tolock) (::sync4cpp::guard<decltype(_tolock)>::type(_tolock))
+
+#include "sync4cpp-guardarray.hpp"
 
 #endif // _SYNC4CPP_PLAIN_HPP
