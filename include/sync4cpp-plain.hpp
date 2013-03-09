@@ -75,7 +75,7 @@ template<typename Type>
 struct is_decorated;
 
 template<typename Type>
-struct get_decor_tag;
+struct get_decor_handler;
 
 template<typename Type, Type Value>
 struct val
@@ -124,7 +124,14 @@ namespace traits {
 	template<typename Mutex>
 	struct default_modifier
 	{
-		typedef void type;
+		typedef typename std::conditional
+			< // if Mutex is decorated
+				is_decorated<Mutex>::value
+			, // then
+				void
+			, // else
+				void
+			>::type type;
 		static void inst()
 		{
 			//static_assert(sizeof(Mutex) != sizeof(Mutex), "Not standard modifier for 'Mutex' set.");
@@ -133,7 +140,7 @@ namespace traits {
 }
 
 	
-template<typename Tag>
+template<typename Handler>
 struct decor
 {
 };
@@ -228,10 +235,10 @@ namespace detail {
 		struct yes_type { char dummy; };
 		struct no_type { yes_type dummy[4]; };
 
-		template<typename Tag>
-		static yes_type _check(const sync4cpp::decor<Tag>&);
-		template<typename Tag>
-		static yes_type _check(const sync4cpp::decor<Tag>* const);
+		template<typename Handler>
+		static yes_type _check(const sync4cpp::decor<Handler>&);
+		template<typename Handler>
+		static yes_type _check(const sync4cpp::decor<Handler>* const);
 		static no_type _check(...);
 
 	public:
@@ -239,10 +246,10 @@ namespace detail {
 	};
 
 	template<typename Type>
-	struct get_decor_tag_impl
+	struct get_decor_handler_impl
 	{
 	private:
-		struct DummyTag
+		struct DummyHandler
 		{
 			template<typename Mutex, typename Modifier>
 			struct guard
@@ -252,13 +259,13 @@ namespace detail {
 		};
 		static Type* type_ptr();
 
-		template<typename Tag>
-		static Tag _resolveTag(const sync4cpp::decor<Tag>&);
-		template<typename Tag>
-		static Tag _resolveTag(const sync4cpp::decor<Tag>* const);
-		static DummyTag _resolveTag(...);
+		template<typename Handler>
+		static Handler _resolveHandler(const sync4cpp::decor<Handler>&);
+		template<typename Handler>
+		static Handler _resolveHandler(const sync4cpp::decor<Handler>* const);
+		static DummyHandler _resolveHandler(...);
 	public:
-		typedef decltype(_resolveTag(*type_ptr())) type;
+		typedef decltype(_resolveHandler(*type_ptr())) type;
 	};
 
 
@@ -326,7 +333,7 @@ namespace detail {
 				< // if Mute is decorated
 					is_decorated<Mutex>::value
 				, // then
-					typename get_decor_tag_impl<Mutex>::type::template guard<Mutex, Modifier>::type
+					typename get_decor_handler_impl<Mutex>::type::template guard<Mutex, Modifier>::type
 				, // else
 					void
 				>::type
@@ -431,10 +438,10 @@ struct is_decorated
 };
 
 template<typename Type>
-struct get_decor_tag
+struct get_decor_handler
 {
 	static_assert(is_decorated<Type>::value, "'Type' is not decorated!");
-	typedef typename detail::get_decor_tag_impl<Type>::type type;
+	typedef typename detail::get_decor_handler_impl<Type>::type type;
 };
 
 template<typename Mutex>
