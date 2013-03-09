@@ -124,14 +124,7 @@ namespace traits {
 	template<typename Mutex>
 	struct default_modifier
 	{
-		typedef typename std::conditional
-			< // if Mutex is decorated
-				is_decorated<Mutex>::value
-			, // then
-				void
-			, // else
-				void
-			>::type type;
+		typedef void type;
 		static void inst()
 		{
 			//static_assert(sizeof(Mutex) != sizeof(Mutex), "Not standard modifier for 'Mutex' set.");
