@@ -54,6 +54,9 @@ namespace detail {
 
 }
 
+template<typename Mutex, typename Modifier>
+struct assignment;
+
 template<	typename Tag,
 			typename P1 = detail::unused_type,
 			typename P2 = detail::unused_type,
@@ -149,31 +152,6 @@ namespace detail {
 	{};
 
 
-	template<typename Mutex, typename Modifier>
-	struct mutex_assignment
-	{
-		static_assert(sizeof(Mutex) != sizeof(Mutex), "The template parameter modifier must be an instance of the template mutex_modifier<...>!");
-	};
-
-
-	template<typename Mutex, typename Tag, typename P1, typename P2, typename P3, typename P4, typename P5>
-	struct mutex_assignment<Mutex, mutex_modifier<Tag, P1, P2, P3, P4, P5> >
-	{
-		typedef mutex_modifier<Tag, P1, P2, P3, P4, P5> modifier_type;
-		typedef Mutex										mutex_type;
-		typedef typename modifier_type::value_type			params_type;
-
-		mutex_assignment(mutex_type* mutex, const params_type& params)
-			: mutex(mutex)
-			, params(params)
-		{
-		}
-
-		mutex_type* mutex;
-		const params_type params;
-	};
-
-
 	template<typename Map>
 	struct get_from_mapping_impl
 	{
@@ -188,7 +166,7 @@ namespace detail {
 		static const typename std::tuple_element<MapIndex, typename Assignment::params_type>::type& get(const Assignment& as)
 		{
 			static_assert(!std::is_same<typename std::tuple_element<MapIndex, typename Assignment::params_type>::type, unused_type>::value, "Parameter with this Index is not used in the Modifier!");
-			return std::get<MapIndex>(as.params);
+			return std::get<MapIndex>(as.params());
 		}
 	};
 
@@ -208,7 +186,7 @@ namespace detail {
 		template<typename Assignment>
 		static const typename Assignment::mutex_type& get(const Assignment& as)
 		{
-			return *as.mutex;
+			return as.mutex();
 		}
 	};
 
@@ -299,7 +277,7 @@ namespace detail {
 			, // then
 				typename guard_entry::guard_type
 			, // else
-				assignment_mapping_wrapper_guard<mutex_assignment<Mutex, Modifier>, typename guard_entry::guard_type, typename guard_entry::mapping>
+				assignment_mapping_wrapper_guard<assignment<Mutex, Modifier>, typename guard_entry::guard_type, typename guard_entry::mapping>
 			>::type guard_type;
 
 
@@ -317,7 +295,7 @@ namespace detail {
 	{
 		typedef typename traits::default_modifier<Mutex>::type modifier_type;
 		static_assert(!std::is_void<modifier_type>::value, "No standard modifier for 'Mutex' set.");
-		typedef typename resolve_guard_impl< mutex_assignment<Mutex, modifier_type> >::guard_type base_guard;
+		typedef typename resolve_guard_impl< assignment<Mutex, modifier_type> >::guard_type base_guard;
 		typedef struct modify_wrapper: public base_guard
 		{
 			modify_wrapper(Mutex& mutex): base_guard(traits::default_modifier<Mutex>::inst() << mutex) {}
@@ -326,7 +304,7 @@ namespace detail {
 	};
 
 	template<typename Mutex, typename Modifier>
-	struct resolve_guard_impl< mutex_assignment<Mutex, Modifier> >
+	struct resolve_guard_impl< assignment<Mutex, Modifier> >
 	{
 		//static_assert(is_registered_mutex<Mutex>::value, "'Mutex' is not a registered mutex!");
 		typedef search_registry_impl<Mutex, Modifier> serach_entry;
@@ -351,6 +329,45 @@ namespace detail {
 	};
 }
 
+template<typename Mutex, typename Modifier>
+struct assignment
+{
+	static_assert(sizeof(Mutex) != sizeof(Mutex), "The template parameter modifier must be an instance of the template mutex_modifier<...>!");
+};
+
+
+template<typename Mutex, typename Tag, typename P1, typename P2, typename P3, typename P4, typename P5>
+struct assignment<Mutex, mutex_modifier<Tag, P1, P2, P3, P4, P5> >
+{
+	typedef mutex_modifier<Tag, P1, P2, P3, P4, P5>		modifier_type;
+	typedef Mutex										mutex_type;
+	typedef typename modifier_type::value_type			params_type;
+
+	assignment(mutex_type& mutex, const params_type& params)
+		: mMutex(mutex)
+		, mParams(params)
+	{
+	}
+
+	assignment(const assignment& another)
+		: mMutex(another.mutex())
+		, mParams(another.params())
+	{
+	}
+
+	template<typename NewMutex>
+	assignment<NewMutex, modifier_type> operator[](NewMutex& m) const
+	{
+		return assignment<NewMutex, modifier_type>(m, params());
+	}
+
+	mutex_type& mutex() const { return mMutex; }
+	const params_type& params() const { return mParams; }
+private:
+	mutex_type& mMutex;
+	const params_type mParams;
+};
+
 template<typename Tag, typename P1, typename P2, typename P3, typename P4, typename P5>
 struct mutex_modifier
 {
@@ -359,12 +376,12 @@ struct mutex_modifier
 	typedef mutex_modifier						this_type;
 
 	template<typename Mutex>
-	struct assignment { typedef detail::mutex_assignment<Mutex, this_type> type; };
+	struct assignment_selector { typedef assignment<Mutex, this_type> type; };
 
 	template<typename Mutex>
-	typename assignment<Mutex>::type operator <<(Mutex& mutex) const
+	typename assignment_selector<Mutex>::type operator <<(Mutex& mutex) const
 	{
-		return assignment<Mutex>::type(&mutex, value);
+		return assignment_selector<Mutex>::type(mutex, value);
 	}
 
 	template<std::size_t Index>

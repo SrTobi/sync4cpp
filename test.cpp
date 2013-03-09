@@ -26,7 +26,7 @@ SYNC4CPP_REGISTER_MUTEX(test*);
 SYNC4CPP_REGISTER_GUARD(test*, testm, test_guard, sync4cpp::map_mutex, sync4cpp::map<0>);
 SYNC4CPP_SET_DEFAULT_GUARD(test*, testm, 1);
 
-using sync4cpp::detail::mutex_assignment;
+using sync4cpp::assignment;
 
 template<typename InternalMutex>
 struct test_decor
@@ -35,12 +35,12 @@ struct test_decor
 	template<typename Mutex, typename Modifier>
 	struct guard
 	{
-		typedef typename sync4cpp::guard<mutex_assignment<InternalMutex, Modifier>>::type base_type;
+		typedef typename sync4cpp::guard<assignment<InternalMutex, Modifier>>::type base_type;
 		typedef struct Wrapper
 			: public base_type
 		{
-			Wrapper(mutex_assignment<Mutex, Modifier>& m)
-				: base_type(mutex_assignment<InternalMutex, Modifier>(&m.mutex->getMutex(), m.params))
+			Wrapper(assignment<Mutex, Modifier>& as)
+				: base_type(as[as.mutex().getMutex()])
 			{}
 		} type;
 	};
