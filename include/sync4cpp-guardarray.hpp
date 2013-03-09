@@ -24,8 +24,8 @@ namespace detail {
 			inline operator unused_type&() { return unused; }
 		};
 
-		inline GuardArray(	T1& m1, T2& m2 = unused_inst, T3& m3 = unused_inst, T4& m4 = unused_inst,
-							T5& m5 = unused_inst, T6& m6 = unused_inst, T7& m7 = unused_inst, T8& m8 = unused_inst, ...)
+		GuardArray(	T1& m1, T2& m2 = unused_type(), T3& m3 = unused_type(), T4& m4 = unused_type(),
+					T5& m5 = unused_type(), T6& m6 = unused_type(), T7& m7 = unused_type(), T8& m8 = unused_type())
 			: done(false)
 			, guard1(m1)
 			, guard2(m2)
