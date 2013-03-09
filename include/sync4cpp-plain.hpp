@@ -498,4 +498,6 @@ namespace traits {
 // sync_here(sync4cpp::shared <= mutex)
 
 
+#define SYNC4CPP_SYNCGUARD(_tolock) (::sync4cpp::guard<decltype(_tolock)>::type(_tolock))
+
 #endif // _SYNC4CPP_PLAIN_HPP
