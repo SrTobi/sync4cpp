@@ -54,6 +54,9 @@ namespace detail {
 
 }
 
+template<size_t Index, typename Modifier>
+struct modifier_parameter;
+
 template<typename Mutex, typename Modifier>
 struct assignment;
 
@@ -64,6 +67,7 @@ template<	typename Tag,
 			typename P4 = detail::unused_type,
 			typename P5 = detail::unused_type>
 struct mutex_modifier;
+
 
 template<typename Type>
 struct is_registered_mutex;
@@ -157,6 +161,7 @@ namespace detail {
 	template<>
 	struct bool_base<true> : public std::true_type
 	{};
+
 
 
 	template<typename Map>
@@ -379,7 +384,7 @@ template<typename Tag, typename P1, typename P2, typename P3, typename P4, typen
 struct mutex_modifier
 {
 	typedef Tag									tag_type;
-	typedef std::tuple<P1, P2, P3, P4, P5>	value_type;
+	typedef std::tuple<P1, P2, P3, P4, P5>		value_type;
 	typedef mutex_modifier						this_type;
 
 	template<typename Mutex>
@@ -409,6 +414,12 @@ private:
 typedef mutex_modifier<struct ExclusiveModifierTag>	exclusive;
 typedef mutex_modifier<struct SharedModifierTag>	shared;
 
+
+template<size_t Index, typename Modifier>
+struct modifier_parameter
+{
+	typedef typename std::tuple_element<Index, typename Modifier::value_type>::type type;
+};
 
 template<typename Type>
 struct is_registered_mutex

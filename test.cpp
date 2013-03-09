@@ -69,6 +69,9 @@ int main()
 		//auto guard = SYNC4CPP_SYNCGUARD(testm(5) << mutex);
 	}
 
+	test* xxx;
+	SYNC4CPP_SYNCGUARD(xxx);
+
 	std::cin.get();
 	return 0;
 }
