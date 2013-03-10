@@ -8,12 +8,12 @@
 
 
 
-#define synchere(...)						HELP_SYNCHERE(__VA_ARGS__)
-#define synchronize(...)					HELP_SYNCHRONIZE(__VA_ARGS__)
+#define synchere(...)						SYNC4CPP_SYNCHERE(__VA_ARGS__)
+#define synchronize(...)					SYNC4CPP_SYNCHRONIZE(__VA_ARGS__)
 
-#define syncuse(_name, ...)					HELP_SYNCUSE(_name, __VA_ARGS__)
-#define syncbind(_name, _src, ...)			HELP_SYNCBIND(_name, _src, __VA_ARGS__)
-#define synccast(_src, ...)					HELP_SYNCCAST(_src, __VA_ARGS__)
+#define syncuse(_name, ...)					SYNC4CPP_SYNCUSE(_name, __VA_ARGS__)
+#define syncbind(_name, _src, ...)			SYNC4CPP_SYNCBIND(_name, _src, __VA_ARGS__)
+#define synccast(_src, ...)					SYNC4CPP_SYNCCAST(_src, __VA_ARGS__)
 
 
 
