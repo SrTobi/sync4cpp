@@ -128,6 +128,10 @@ BOOST_AUTO_TEST_CASE(determination_test_for_pointer_mutex)
 							typename sync4cpp::guard<decltype(shared() << mutex)>::type,
 							SharedPointerGuard
 						>::value));
+	BOOST_STATIC_ASSERT((sync4cpp::is_registered_mutex<PointerMutex*>::value));
+	BOOST_STATIC_ASSERT((sync4cpp::has_registered_guard<PointerMutex*, exclusive>::value));
+	BOOST_STATIC_ASSERT((sync4cpp::has_registered_guard<PointerMutex*, shared>::value));
+	BOOST_STATIC_ASSERT((!sync4cpp::is_decorated<PointerMutex*>::value));
 }
 
 

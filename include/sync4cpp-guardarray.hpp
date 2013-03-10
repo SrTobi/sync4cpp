@@ -36,7 +36,7 @@ namespace detail {
 			, guard7(m7)
 			, guard8(m8)
 		{
-			using traits::is_locked;
+			using sync4cpp::is_locked;
 			bool allLocked = is_locked(guard1) && is_locked(guard2) && is_locked(guard3) && is_locked(guard4)
 							&& is_locked(guard5) && is_locked(guard6) && is_locked(guard7) && is_locked(guard8);
 			done = !allLocked;
