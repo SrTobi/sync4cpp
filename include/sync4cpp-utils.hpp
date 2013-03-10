@@ -35,6 +35,32 @@ namespace detail {
 	};
 
 
+
+	template<typename InternalMutex>
+	struct syncable_decor
+		: public decor<syncable<InternalMutex> >
+	{
+	private:
+		static InternalMutex& ExtractMutex(const syncable<InternalMutex>& mutex)
+		{
+			return mutex._mMutex;
+		}
+	public:
+		SYNC4CPP_PLACE_DEFAULT_MODIFIER_FACTORY(typename get_default_modifier_factory<InternalMutex>::type);
+		template<typename Mutex, typename Modifier>
+		struct guard
+		{
+			typedef typename sync4cpp::guard<assignment<InternalMutex, Modifier>>::type base_type;
+			typedef struct Wrapper
+				: public base_type
+			{
+				Wrapper(const assignment<Mutex, Modifier>& as)
+					: base_type(as[ExtractMutex(as.mutex())])
+				{}
+			} type;
+		};
+	};
+
 }
 
 
@@ -42,8 +68,6 @@ template<typename Mutex>
 class shared_mutex
 	: public detail::shared_mutex_decor<Mutex>
 {
-	template<typename InternalMutex>
-	friend struct detail::shared_mutex_decor;
 public:
 	typedef Mutex						mutex_type;
 	typedef shared_mutex<mutex_type>	this_type;
@@ -78,16 +102,26 @@ private:
 
 template<typename Mutex>
 class syncable
+	: public detail::syncable_decor<Mutex>
 {
+	template<typename InternalMutex>
+	friend struct detail::syncable_decor;
+public:
+	typedef Mutex mutex_type;
+
 	syncable()
 	{
 	}
 
+	syncable(const mutex_type& mutex)
+		: _mMutex(mutex)
+	{
 
+	}
 
 
 private:
-	Mutex _mMutex;
+	mutable mutex_type _mMutex;
 };
 
 }

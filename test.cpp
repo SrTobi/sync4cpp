@@ -59,12 +59,17 @@ struct decorated
 };
 
 
+struct hallo
+	: public sync4cpp::syncable<test*>
+{
+
+};
 
 int main()
 {
 	static_assert(sync4cpp::is_decorated<decorated>::value, "");
 	//static_assert(std::is_same<typename sync4cpp::traits::mutex_registry<test*>::template guard<sync4cpp::exclusive>::guard_type, test_guard>::value, "!!!!!!!!!!!!!!!!!!!!!!!");
-	sync4cpp::shared_mutex<test*> mutex;
+	hallo mutex;
 	{
 		SYNC4CPP_SYNCHERE(mutex);
 		//auto guard = SYNC4CPP_SYNCGUARD(testm(5) << mutex);
