@@ -18,7 +18,7 @@ struct test
 
 struct test_guard
 {
-	test_guard(test*, int i){cout << "in\n" << i;}
+	test_guard(test*, int i){cout << "in\n" << i << "\n";}
 	~test_guard() {cout << "out\n";}
 };
 
@@ -64,14 +64,12 @@ int main()
 {
 	static_assert(sync4cpp::is_decorated<decorated>::value, "");
 	//static_assert(std::is_same<typename sync4cpp::traits::mutex_registry<test*>::template guard<sync4cpp::exclusive>::guard_type, test_guard>::value, "!!!!!!!!!!!!!!!!!!!!!!!");
-	decorated mutex;
+	sync4cpp::shared_mutex<test*> mutex;
 	{
 		SYNC4CPP_SYNCHERE(mutex);
 		//auto guard = SYNC4CPP_SYNCGUARD(testm(5) << mutex);
 	}
 
-	test* xxx;
-	SYNC4CPP_SYNCGUARD(xxx);
 
 	std::cin.get();
 	return 0;

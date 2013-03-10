@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _SYNC4CPP_PLAIN_HPP
 #define _SYNC4CPP_PLAIN_HPP
 
@@ -607,5 +608,7 @@ SYNC4CPP_SET_DEFAULT_GUARD(sync4cpp::detail::unused_type, sync4cpp::exclusive);
 #define SYNC4CPP_SYNCGUARD(_tolock) (::sync4cpp::guard<decltype(_tolock)>::type(_tolock))
 
 #include "sync4cpp-guardarray.hpp"
+#include "sync4cpp-utils.hpp"
+#include "sync4cpp-synchronized.hpp"
 
 #endif // _SYNC4CPP_PLAIN_HPP

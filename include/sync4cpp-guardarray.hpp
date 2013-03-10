@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _SYNC4CPP_GUARDARRAY_HPP
 #define _SYNC4CPP_GUARDARRAY_HPP
 
