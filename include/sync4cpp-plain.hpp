@@ -233,7 +233,11 @@ namespace detail {
 #define MAKE_ASSIGNMENT_MAPPING_WRAPPER_GUARD_WITH_N_PARAMS(_count, ...)						\
 	template<typename Assignment, typename Guard, typename Mapping>								\
 	struct assignment_mapping_wrapper_guard<Assignment, Guard, Mapping, _count> : public Guard	\
-	{	assignment_mapping_wrapper_guard(const Assignment& as) : Guard(__VA_ARGS__){}	};
+	{																							\
+		typedef Guard native_guard;																\
+		assignment_mapping_wrapper_guard(const Assignment& as) : native_guard(__VA_ARGS__){}	\
+		native_guard& as_native_guard() { return *this; }										\
+	};	
 #define MAPPING_GET(_index) get_from_mapping_impl<typename std::tuple_element<_index, Mapping>::type>::get(as)
 	MAKE_ASSIGNMENT_MAPPING_WRAPPER_GUARD_WITH_N_PARAMS(0, as.mutex());
 	MAKE_ASSIGNMENT_MAPPING_WRAPPER_GUARD_WITH_N_PARAMS(1, MAPPING_GET(0));
