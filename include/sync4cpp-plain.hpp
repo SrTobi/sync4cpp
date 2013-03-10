@@ -150,6 +150,12 @@ namespace traits {
 		typedef std::false_type found;
 		typedef disable_default_modifier factory;
 	};
+
+	template<typename Guard>
+	bool is_locked(const Guard&)
+	{
+		return true;
+	}
 }
 
 	

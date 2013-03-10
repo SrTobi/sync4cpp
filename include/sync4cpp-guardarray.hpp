@@ -26,8 +26,7 @@ namespace detail {
 
 		GuardArray(	T1& m1, T2& m2 = unused_type(), T3& m3 = unused_type(), T4& m4 = unused_type(),
 					T5& m5 = unused_type(), T6& m6 = unused_type(), T7& m7 = unused_type(), T8& m8 = unused_type())
-			: done(false)
-			, guard1(m1)
+			: guard1(m1)
 			, guard2(m2)
 			, guard3(m3)
 			, guard4(m4)
@@ -35,7 +34,12 @@ namespace detail {
 			, guard6(m6)
 			, guard7(m7)
 			, guard8(m8)
-		{}
+		{
+			using traits::is_locked;
+			bool allLocked = is_locked(guard1) && is_locked(guard2) && is_locked(guard3) && is_locked(guard4)
+							&& is_locked(guard5) && is_locked(guard6) && is_locked(guard7) && is_locked(guard8);
+			done = !allLocked;
+		}
 
 		typename guard<T1>::type guard1;
 		typename guard<T2>::type guard2;
