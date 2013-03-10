@@ -218,7 +218,7 @@ namespace detail {
 	struct get_from_mapping_impl< map_mutex >
 	{
 		template<typename Assignment>
-		static const typename Assignment::mutex_type& get(const Assignment& as)
+		static typename Assignment::mutex_type& get(const Assignment& as)
 		{
 			return as.mutex();
 		}

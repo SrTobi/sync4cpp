@@ -18,6 +18,9 @@ enum MockEvents
 	SharedLock,
 	SharedUnLock,
 
+	CustomLock,
+	CustomUnLock,
+
 	MutexDestroyed,
 
 	LockedAccess
@@ -287,6 +290,7 @@ private:
 
 
 //////////////////////////////////////////////////////////////////////////
+
 SYNC4CPP_REGISTER_MUTEX(PointerMockMutex*);
 SYNC4CPP_REGISTER_GUARD(PointerMockMutex*, exclusive, ExclusivePointerMockGuard);
 SYNC4CPP_REGISTER_GUARD(PointerMockMutex*, shared, SharedPointerMockGuard);
@@ -309,6 +313,104 @@ BOOST_AUTO_TEST_CASE(simple_pointer_lock_test)
 
 		SYNC4CPP_SYNCHRONIZE(pmutex)
 		{
+			mock.expect(LockedAccess);
+		}
+	}
+
+}
+
+
+/************************************** check is_locked *******************************************/
+
+class IsLockMockMutex
+	: boost::noncopyable
+{
+public:
+	IsLockMockMutex(MockObserver<MockEvents> obs)
+		: observer(obs)
+	{
+		observer.expect(MutexCreated);
+	}
+
+	~IsLockMockMutex()
+	{
+		observer.expect(MutexDestroyed);
+	}
+
+	MockObserver<MockEvents> observer;
+};
+
+
+class IsLockMockGuard
+{
+public:
+	IsLockMockGuard(IsLockMockMutex& mutex, bool lock)
+		: observer(mutex.observer)
+		, locked(lock)
+	{
+		observer.expect(CustomLock);
+	}
+
+	~IsLockMockGuard()
+	{
+		observer.expect(CustomUnLock);
+	}
+
+	MockObserver<MockEvents> observer;
+	bool locked;
+};
+
+namespace sync4cpp {namespace traits {
+
+	static bool is_locked(const IsLockMockGuard& guard)
+	{
+		return guard.locked;
+	}
+
+}}
+
+typedef sync4cpp::mutex_modifier<struct IsLockModifierTag, bool> IsLockModifier;
+
+//////////////////////////////////////////////////////////////////////////
+
+SYNC4CPP_REGISTER_MUTEX(IsLockMockMutex);
+SYNC4CPP_REGISTER_GUARD(IsLockMockMutex, IsLockModifier, IsLockMockGuard,
+						sync4cpp::map_mutex, sync4cpp::map<0>);
+
+//////////////////////////////////////////////////////////////////////////
+
+
+BOOST_AUTO_TEST_CASE(is_lock_test)
+{
+	MockObserver<MockEvents> mock;
+	mock.set()	<< MutexCreated
+				<< CustomLock
+				<< LockedAccess
+				<< CustomUnLock
+				<< MutexDestroyed
+				<< MutexCreated
+				<< CustomLock
+				<< LockedAccess
+				<< CustomUnLock
+				<< MutexDestroyed;
+
+	{
+		IsLockMockMutex mutex(mock);
+
+		{
+			auto guard = SYNC4CPP_SYNCGUARD(IsLockModifier(true) << mutex);
+			BOOST_CHECK(sync4cpp::is_locked(guard) == true);
+			mock.expect(LockedAccess);
+		}
+	}
+
+
+	{
+		IsLockMockMutex mutex(mock);
+
+		{
+			auto guard = SYNC4CPP_SYNCGUARD(IsLockModifier(false) << mutex);
+			BOOST_CHECK(sync4cpp::is_locked(guard) == false);
 			mock.expect(LockedAccess);
 		}
 	}
