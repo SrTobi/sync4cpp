@@ -25,7 +25,9 @@ include_directories(include ${Boost_INCLUDE_DIRS})
 add_executable(sync4cpp		 		${include_files} ${sources_files})
 add_executable(sync4cpp-tests 		${include_files} ${tests_files})
 
+if(NOT MSVC)
 ADD_DEFINITIONS("-std=c++0x")
+endif(NOT MSVC)
 
 target_link_libraries(sync4cpp-tests 		${Boost_LIBRARIES})
 
