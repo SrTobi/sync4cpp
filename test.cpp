@@ -32,6 +32,7 @@ template<typename InternalMutex>
 struct test_decor
 	: public sync4cpp::decor<test_decor<InternalMutex>>
 {
+	SYNC4CPP_PLACE_DEFAULT_MODIFIER_FACTORY(typename sync4cpp::get_default_modifier_factory<InternalMutex>::type);
 	template<typename Mutex, typename Modifier>
 	struct guard
 	{
@@ -65,7 +66,7 @@ int main()
 	//static_assert(std::is_same<typename sync4cpp::traits::mutex_registry<test*>::template guard<sync4cpp::exclusive>::guard_type, test_guard>::value, "!!!!!!!!!!!!!!!!!!!!!!!");
 	decorated mutex;
 	{
-		SYNC4CPP_SYNCHERE(testm(1) << mutex, testm(2) << mutex);
+		SYNC4CPP_SYNCHERE(mutex);
 		//auto guard = SYNC4CPP_SYNCGUARD(testm(5) << mutex);
 	}
 

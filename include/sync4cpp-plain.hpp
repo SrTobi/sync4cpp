@@ -51,7 +51,6 @@ namespace traits {
 namespace detail {
 
 	struct unused_type;
-
 }
 
 template<size_t Index, typename Modifier>
@@ -81,6 +80,9 @@ struct is_decorated;
 template<typename Type>
 struct get_decor_handler;
 
+template<typename Mutex>
+struct get_default_modifier;
+
 template<typename Type, Type Value>
 struct val
 	: public std::integral_constant<Type, Value>
@@ -97,6 +99,23 @@ struct map_mutex
 {
 };
 
+struct disable_default_modifier
+{
+	typedef void modifier_type;
+	static void inst()
+	{
+		//static_assert(sizeof(Mutex) != sizeof(Mutex), "Not standard modifier for 'Mutex' set.");
+	}
+};
+
+template<typename DefaultModifierFactory = disable_default_modifier>
+struct decor_handler_base
+{
+	typedef DefaultModifierFactory default_modifier_factory;
+};
+
+template<typename Mutex>
+static typename get_default_modifier<Mutex>::type instance_default_modifier();
 
 /********************* Implementation ***********************/
 namespace traits {
@@ -126,13 +145,10 @@ namespace traits {
 
 
 	template<typename Mutex>
-	struct default_modifier
+	struct default_modifier_registry
 	{
-		typedef void type;
-		static void inst()
-		{
-			//static_assert(sizeof(Mutex) != sizeof(Mutex), "Not standard modifier for 'Mutex' set.");
-		}
+		typedef std::false_type found;
+		typedef disable_default_modifier factory;
 	};
 }
 
@@ -141,7 +157,6 @@ template<typename Handler>
 struct decor
 {
 };
-
 
 namespace detail {
 
@@ -248,6 +263,7 @@ namespace detail {
 	{
 	private:
 		struct DummyHandler
+			: public decor_handler_base<>
 		{
 			template<typename Mutex, typename Modifier>
 			struct guard
@@ -266,6 +282,33 @@ namespace detail {
 		typedef decltype(_resolveHandler(*type_ptr())) type;
 	};
 
+	template<typename Mutex>
+	struct get_default_modifier_factory_impl
+	{
+		typedef traits::default_modifier_registry<Mutex> entry;
+		typedef typename entry::found found_in_regestry;
+		typedef typename std::conditional
+			< // if is registered
+				found_in_regestry::value
+			, // then
+				typename entry::factory
+			, // else
+				typename std::conditional
+				< // is Mutex is decorated
+					is_decorated<Mutex>::value
+				, // then
+					typename get_decor_handler_impl<Mutex>::type::default_modifier_factory
+				, // else
+					disable_default_modifier
+				>::type
+			>::type type;
+	};
+
+	template<typename Mutex>
+	struct get_default_modifier_impl
+	{
+		typedef typename get_default_modifier_factory_impl<Mutex>::type::modifier_type type;
+	};
 
 	template<typename Type>
 	struct is_registered_impl
@@ -305,12 +348,12 @@ namespace detail {
 	template<typename Mutex>
 	struct resolve_guard_impl
 	{
-		typedef typename traits::default_modifier<Mutex>::type modifier_type;
+		typedef typename get_default_modifier<Mutex>::type modifier_type;
 		static_assert(!std::is_void<modifier_type>::value, "No standard modifier for 'Mutex' set.");
 		typedef typename resolve_guard_impl< assignment<Mutex, modifier_type> >::guard_type base_guard;
 		typedef struct modify_wrapper: public base_guard
 		{
-			modify_wrapper(Mutex& mutex): base_guard(traits::default_modifier<Mutex>::inst() << mutex) {}
+			modify_wrapper(Mutex& mutex): base_guard(instance_default_modifier<Mutex>() << mutex) {}
 			~modify_wrapper() {}
 		} guard_type;
 	};
@@ -336,7 +379,6 @@ namespace detail {
 					void
 				>::type
 			>::type guard_type;
-		static_assert(!std::is_void<guard_type>::value, "Was not able to resolve a guard for 'Mutex'!");
 		//static_assert(!std::is_void<guard_type>::value, "No guard set for 'Mutex' and 'Modifier'!");
 	};
 }
@@ -448,12 +490,40 @@ struct get_decor_handler
 	typedef typename detail::get_decor_handler_impl<Type>::type type;
 };
 
+template<typename Type>
+struct has_default_modifier
+	: public detail::bool_base<!std::is_void<typename detail::get_default_modifier_impl<Type>::type>::value>
+{
+};
+
+template<typename Mutex>
+struct get_default_modifier
+{
+	static_assert(has_default_modifier<Mutex>::value, "'Mutex' has no default modifier!");
+	typedef typename detail::get_default_modifier_impl<Mutex>::type type;
+};
+
+template<typename Mutex>
+struct get_default_modifier_factory
+{
+	typedef typename detail::get_default_modifier_factory_impl<Mutex>::type type;
+};
+
+
 template<typename Mutex>
 struct guard
 {
 	typedef typename detail::resolve_guard_impl<Mutex>::guard_type type;
+	static_assert(!std::is_void<type>::value, "Was not able to resolve a guard for 'Mutex'!");
 	//typedef detail::resolve_guard_impl<Mutex>::type type;
 };
+
+
+template<typename Mutex>
+static typename get_default_modifier<Mutex>::type instance_default_modifier()
+{
+	return detail::get_default_modifier_factory_impl<Mutex>::type::inst();
+}
 
 
 /********************************** default settings **********************************************/
@@ -501,13 +571,22 @@ namespace traits {
 			};												\
 		}}
 
-#define SYNC4CPP_SET_DEFAULT_GUARD(_mutex, _modifier, ...)	\
-		namespace sync4cpp { namespace traits {				\
-			template<> struct default_modifier<_mutex>		\
-			{												\
-				typedef _modifier type;						\
-				static type inst() { return type(__VA_ARGS__); }	\
-			};												\
+#define SYNC4CPP_MAKE_MODIFIER_FACTORY(_modifier, ...)							\
+		struct {																\
+			typedef _modifier modifier_type;									\
+			static modifier_type inst() { return modifier_type(__VA_ARGS__); }	\
+		}
+
+#define SYNC4CPP_PLACE_DEFAULT_MODIFIER_FACTORY(_factory)	\
+		typedef _factory default_modifier_factory;
+
+#define SYNC4CPP_SET_DEFAULT_GUARD(_mutex, _modifier, ...)				\
+		namespace sync4cpp { namespace traits {							\
+			template<> struct default_modifier_registry<_mutex>			\
+			{															\
+				typedef std::true_type found;							\
+				typedef SYNC4CPP_MAKE_MODIFIER_FACTORY(_modifier, __VA_ARGS__) factory;\
+			};															\
 		}}
 
 SYNC4CPP_REGISTER_MUTEX(sync4cpp::detail::unused_type);
