@@ -38,7 +38,7 @@ namespace detail {
 
 	template<typename InternalMutex>
 	struct syncable_decor
-		: public decor<syncable<InternalMutex> >
+		: public decor<syncable_decor<InternalMutex> >
 	{
 	private:
 		static InternalMutex& ExtractMutex(const syncable<InternalMutex>& mutex)
