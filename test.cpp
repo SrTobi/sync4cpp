@@ -19,12 +19,18 @@ struct test
 struct test_guard
 {
 	test_guard(test*, int i){cout << "in\n" << i << "\n";}
+	test_guard(test, int i){cout << "in\n" << i << "\n";}
 	~test_guard() {cout << "out\n";}
 };
 
 SYNC4CPP_REGISTER_MUTEX(test*);
 SYNC4CPP_REGISTER_GUARD(test*, testm, test_guard, sync4cpp::map_mutex, sync4cpp::map<0>);
 SYNC4CPP_SET_DEFAULT_GUARD(test*, testm, 1);
+
+
+SYNC4CPP_REGISTER_MUTEX(test);
+SYNC4CPP_REGISTER_GUARD(test, testm, test_guard, sync4cpp::map_mutex, sync4cpp::map<0>);
+SYNC4CPP_SET_DEFAULT_GUARD(test, testm, 5);
 
 using sync4cpp::assignment;
 
@@ -60,10 +66,13 @@ struct decorated
 
 
 struct hallo
-	: public sync4cpp::syncable<test*>
+	: sync4cpp::syncable<test>, public sync4cpp::syncable<test*>
 {
 
 };
+
+sync4cpp::synchronized<int, test> synced;
+
 
 int main()
 {
@@ -71,8 +80,9 @@ int main()
 	//static_assert(std::is_same<typename sync4cpp::traits::mutex_registry<test*>::template guard<sync4cpp::exclusive>::guard_type, test_guard>::value, "!!!!!!!!!!!!!!!!!!!!!!!");
 	hallo mutex;
 	{
-		SYNC4CPP_SYNCHERE(mutex);
-		//auto guard = SYNC4CPP_SYNCGUARD(testm(5) << mutex);
+		auto guard = SYNC4CPP_SYNCGUARD(synced);
+
+		cout << guard.value;
 	}
 
 
