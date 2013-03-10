@@ -84,8 +84,10 @@ private:
 
 //////////////////////////////////////////////////////////////////////////
 
+SYNC4CPP_REGISTER_MUTEX(ValueMockMutex)
 SYNC4CPP_REGISTER_GUARD(ValueMockMutex, exclusive, ExclusiveValueMockGuard);
 SYNC4CPP_REGISTER_GUARD(ValueMockMutex, shared, SharedValueMockGuard);
+SYNC4CPP_SET_DEFAULT_GUARD(ValueMockMutex, exclusive);
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -121,7 +123,7 @@ BOOST_AUTO_TEST_CASE(simple_explicit_exclusive_lock_test)
 	{
 		ValueMockMutex mutex(mock);
 
-		SYNC4CPP_SYNCHRONIZE(exclusive::with(mutex))
+		SYNC4CPP_SYNCHRONIZE(exclusive() << mutex)
 		{
 			mock.expect(LockedAccess);
 		}
@@ -141,7 +143,7 @@ BOOST_AUTO_TEST_CASE(simple_shared_lock_test)
 	{
 		ValueMockMutex mutex(mock);
 
-		SYNC4CPP_SYNCHRONIZE(shared::with(mutex))
+		SYNC4CPP_SYNCHRONIZE(shared() << mutex)
 		{
 			mock.expect(LockedAccess);
 		}
@@ -165,11 +167,11 @@ BOOST_AUTO_TEST_CASE(nested_shared_lock_test)
 	{
 		ValueMockMutex mutex(mock);
 
-		SYNC4CPP_SYNCHRONIZE(shared::with(mutex))
+		SYNC4CPP_SYNCHRONIZE(shared() << mutex)
 		{
 			mock.expect(LockedAccess);
 
-			SYNC4CPP_SYNCHRONIZE(shared::with(mutex))
+			SYNC4CPP_SYNCHRONIZE(shared() << mutex)
 			{
 				mock.expect(LockedAccess);
 			}
@@ -192,7 +194,7 @@ BOOST_AUTO_TEST_CASE(lock_array_test)
 	{
 		ValueMockMutex mutex(mock);
 
-		SYNC4CPP_SYNCHRONIZE(mutex, shared::with(mutex))
+		SYNC4CPP_SYNCHRONIZE(mutex, shared() << mutex)
 		{
 			mock.expect(LockedAccess);
 		}
@@ -215,35 +217,13 @@ BOOST_AUTO_TEST_CASE(lock_array_here_test)
 		ValueMockMutex mutex(mock);
 
 		{
-			SYNC4CPP_SYNCHERE(mutex, shared::with(mutex));
+			SYNC4CPP_SYNCHERE(mutex, shared() << mutex);
 			mock.expect(LockedAccess);
 		}
 	}
 
 }
 
-BOOST_AUTO_TEST_CASE(mutex_as_pointer_test)
-{
-	MockObserver<MockEvents> mock;
-	mock.set()	<< MutexCreated
-		<< ExclusiveLock
-		<< SharedLock
-		<< LockedAccess
-		<< SharedUnLock
-		<< ExclusiveUnLock
-		<< MutexDestroyed;
-
-	{
-		ValueMockMutex mutex(mock);
-		ValueMockMutex* pmutex = &mutex;
-
-		SYNC4CPP_SYNCHRONIZE(&mutex, shared::with(pmutex))
-		{
-			mock.expect(LockedAccess);
-		}
-	}
-
-}
 
 
 /************************************** Now with pointer type *******************************************/
@@ -307,9 +287,10 @@ private:
 
 
 //////////////////////////////////////////////////////////////////////////
-
+SYNC4CPP_REGISTER_MUTEX(PointerMockMutex*);
 SYNC4CPP_REGISTER_GUARD(PointerMockMutex*, exclusive, ExclusivePointerMockGuard);
 SYNC4CPP_REGISTER_GUARD(PointerMockMutex*, shared, SharedPointerMockGuard);
+SYNC4CPP_SET_DEFAULT_GUARD(PointerMockMutex*, exclusive);
 
 //////////////////////////////////////////////////////////////////////////
 

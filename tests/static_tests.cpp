@@ -31,10 +31,10 @@ class SharedValueGuard
 	}
 };
 
-
+SYNC4CPP_REGISTER_MUTEX(ValueMutex);
 SYNC4CPP_REGISTER_GUARD(ValueMutex, exclusive, ExclusiveValueGuard);
 SYNC4CPP_REGISTER_GUARD(ValueMutex, shared, SharedValueGuard);
-
+SYNC4CPP_SET_DEFAULT_GUARD(ValueMutex, exclusive);
 
 
 
@@ -43,78 +43,27 @@ BOOST_AUTO_TEST_CASE(determination_test_for_value_mutex)
 {
 	ValueMutex mutex;
 
-	// Suppress warnings
 	(void) mutex;
 
-	// ************* Check if target mutex is right ************* //
-	// With reference
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex)::target_mutex,
-							ValueMutex
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex, shared)::target_mutex,
-							ValueMutex
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex, exclusive)::target_mutex,
-							ValueMutex
-						>::value));
-	
-	// ************* Check if target mutex is right ************* //
-	// With pointer
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex)::target_mutex,
-							ValueMutex
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex, shared)::target_mutex,
-							ValueMutex
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex, exclusive)::target_mutex,
-							ValueMutex
-						>::value));
-
 
 	// ************* Check if guard is right ************* //
 	// With reference
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex)::guard_type,
-							ExclusiveValueGuard
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex, shared)::guard_type,
-							SharedValueGuard
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex, exclusive)::guard_type,
+	BOOST_STATIC_ASSERT((std::is_convertible<
+							typename sync4cpp::guard<ValueMutex>::type,
 							ExclusiveValueGuard
 						>::value));
 
-	
-	// ************* Check if guard is right ************* //
-	// With pointer
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex)::guard_type,
+	BOOST_STATIC_ASSERT((std::is_convertible<
+							typename sync4cpp::guard<decltype(exclusive() << mutex)>::type,
 							ExclusiveValueGuard
 						>::value));
 	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex, shared)::guard_type,
+	BOOST_STATIC_ASSERT((std::is_convertible<
+							typename sync4cpp::guard<decltype(shared() << mutex)>::type,
 							SharedValueGuard
 						>::value));
 	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex, exclusive)::guard_type,
-							ExclusiveValueGuard
-						>::value));
+	
 }
 
 
@@ -144,85 +93,34 @@ class SharedPointerGuard
 	}
 };
 
+SYNC4CPP_REGISTER_MUTEX(PointerMutex*);
 SYNC4CPP_REGISTER_GUARD(PointerMutex*, exclusive, ExclusivePointerGuard);
 SYNC4CPP_REGISTER_GUARD(PointerMutex*, shared, SharedPointerGuard);
+SYNC4CPP_SET_DEFAULT_GUARD(PointerMutex*, exclusive);
 
 
 BOOST_AUTO_TEST_CASE(determination_test_for_pointer_mutex)
 {
-	PointerMutex mutex;
+	PointerMutex* mutex;
 
 	// Suppress warnings
 	(void) mutex;
-
-	// ************* Check if target mutex is right ************* //
-	// With reference
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex)::target_mutex,
-							PointerMutex*
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex, shared)::target_mutex,
-							PointerMutex*
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex, exclusive)::target_mutex,
-							PointerMutex*
-						>::value));
-	
-	// ************* Check if target mutex is right ************* //
-	// With pointer
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex)::target_mutex,
-							PointerMutex*
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex, shared)::target_mutex,
-							PointerMutex*
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex, exclusive)::target_mutex,
-							PointerMutex*
-						>::value));
-
-
-	// ************* Check if guard is right ************* //
-	// With reference
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex)::guard_type,
-							ExclusivePointerGuard
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex, shared)::guard_type,
-							SharedPointerGuard
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(mutex, exclusive)::guard_type,
-							ExclusivePointerGuard
-						>::value));
-
 	
 	// ************* Check if guard is right ************* //
-	// With pointer
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex)::guard_type,
+	// With reference
+	BOOST_STATIC_ASSERT((std::is_convertible<
+							typename sync4cpp::guard<PointerMutex*>::type,
+							ExclusivePointerGuard
+						>::value));
+
+	BOOST_STATIC_ASSERT((std::is_convertible<
+							typename sync4cpp::guard<decltype(exclusive() << mutex)>::type,
 							ExclusivePointerGuard
 						>::value));
 	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex, shared)::guard_type,
+	BOOST_STATIC_ASSERT((std::is_convertible<
+							typename sync4cpp::guard<decltype(shared() << mutex)>::type,
 							SharedPointerGuard
-						>::value));
-	
-	BOOST_STATIC_ASSERT((std::is_same<
-							SYNC4CPP_DETERMINATE_MUTEX(&mutex, exclusive)::guard_type,
-							ExclusivePointerGuard
 						>::value));
 }
 
