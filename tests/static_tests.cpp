@@ -63,7 +63,13 @@ BOOST_AUTO_TEST_CASE(determination_test_for_value_mutex)
 							SharedValueGuard
 						>::value));
 	
-	
+
+
+	// ************* Check some meta functions ************* //
+	BOOST_STATIC_ASSERT((sync4cpp::is_registered_mutex<ValueMutex>::value));
+	BOOST_STATIC_ASSERT((sync4cpp::has_registered_guard<ValueMutex, exclusive>::value));
+	BOOST_STATIC_ASSERT((sync4cpp::has_registered_guard<ValueMutex, shared>::value));
+	BOOST_STATIC_ASSERT((!sync4cpp::is_decorated<ValueMutex>::value));
 }
 
 
