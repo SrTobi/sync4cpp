@@ -97,6 +97,7 @@ public:
 
 	void expect(const Events& v)
 	{
+		BOOST_REQUIRE_MESSAGE(events->size(), "Expected something from an empty list!");
 		BOOST_CHECK_EQUAL(v, events->front());
 		events->pop_front();
 	}
