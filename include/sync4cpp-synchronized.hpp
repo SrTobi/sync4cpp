@@ -53,47 +53,31 @@ class synchronized
 	template<typename InternalMutex, typename ValueType>
 	friend struct detail::synchronized_decor;
 
-	inline synchronized(const synchronized& p)
+	/*inline synchronized(const synchronized& p)
 	{
 
-	}
+	}*/
 public:
-	typedef syncable<Mutex>						base_type;
-	typedef typename base_type::mutex_type		mutex_type;
-	typedef ValueType							value_type;
+	typedef syncable<Mutex>		base_type;
+	typedef Mutex				mutex_type;
+	typedef ValueType			value_type;
 
 	synchronized()
 	{}
 
-	template<typename T1>
-	inline synchronized(const T1& p1)
-		: mValue(p1)
+	inline synchronized(const value_type& value)
+		: mValue(value)
 	{}
 
-	template<typename T1, typename T2>
-	inline synchronized(const T1& p1, const T2& p2)
-		: mValue(p1, p2)
+	inline synchronized(const mutex_type&& mutex)
+		: syncable(mutex)
 	{}
 
-	template<typename T1, typename T2, typename T3>
-	inline synchronized(const T1& p1, const T2& p2, const T3& p3)
-		: mValue(p1, p2, p3)
+	inline synchronized(const value_type& value, const mutex_type&& mutex)
+		: syncable(std::move(mutex))
+		, mValue(value)
 	{}
 
-	template<typename T1, typename T2, typename T3, typename T4>
-	inline synchronized(const T1& p1, const T2& p2, const T3& p3, const T4& p4)
-		: mValue(p1, p2, p3, p4)
-	{}
-
-	template<typename T1, typename T2, typename T3, typename T4, typename T5>
-	inline synchronized(const T1& p1, const T2& p2, const T3& p3, const T4& p4, const T5& p5)
-		: mValue(p1, p2, p3, p4, p5)
-	{}
-
-	template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-	inline synchronized(const T1& p1, const T2& p2, const T3& p3, const T4& p4, const T5& p5, const T6& p6)
-		: mValue(p1, p2, p3, p4, p5, p6)
-	{}
 
 
 private:
@@ -103,4 +87,7 @@ private:
 
 }
 
+
+#define SYNC4CPP_SYNCBIND(_var, _mutex) auto SYNC4CPP_LOCK_NAME(_sync_guard_named_##_var##_in_) = SYNC4CPP_SYNCGUARD(_mutex); auto& _var = SYNC4CPP_LOCK_NAME(_sync_guard_named_##_var##_in_).value;
+#define SYNC4CPP_SYNCUSE(_mutex)		SYNC4CPP_SYNCBIND(_mutex, _mutex);
 #endif

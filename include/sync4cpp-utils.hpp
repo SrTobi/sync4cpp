@@ -113,7 +113,7 @@ public:
 	{
 	}
 
-	syncable(const mutex_type& mutex)
+	syncable(const mutex_type&& mutex)
 		: _mMutex(mutex)
 	{
 
