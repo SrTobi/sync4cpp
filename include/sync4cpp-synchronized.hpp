@@ -50,7 +50,7 @@ class synchronized
 	: public detail::synchronized_decor<Mutex, ValueType>
 	, public syncable<Mutex>
 {
-	template<typename InternalMutex, typename ValueType>
+	template<typename InternalMutex_, typename ValueType_>
 	friend struct detail::synchronized_decor;
 
 	/*inline synchronized(const synchronized& p)
@@ -70,11 +70,11 @@ public:
 	{}
 
 	inline synchronized(const mutex_type&& mutex)
-		: syncable(mutex)
+		: base_type(mutex)
 	{}
 
 	inline synchronized(const value_type& value, const mutex_type&& mutex)
-		: syncable(std::move(mutex))
+		: base_type(std::move(mutex))
 		, mValue(value)
 	{}
 
