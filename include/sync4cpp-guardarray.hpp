@@ -9,21 +9,22 @@
 
 namespace sync4cpp {
 namespace detail {
+	template<typename T>
+	struct def
+	{
+		inline operator T() const { throw "You forgot to give an argument";}
+	};
+	template<>
+	struct def<unused_type>
+	{
+		unused_type unused;
+		inline operator unused_type&() { return unused; }
+	};
 
 	template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
 	struct GuardArray
 	{
-		template<typename T>
-		struct def
-		{
-			inline operator T() const { throw "You forgot to give an argument";}
-		};
-		template<>
-		struct def<unused_type>
-		{
-			unused_type unused;
-			inline operator unused_type&() { return unused; }
-		};
+		
 
 		GuardArray(	T1& m1, T2& m2 = unused_type(), T3& m3 = unused_type(), T4& m4 = unused_type(),
 					T5& m5 = unused_type(), T6& m6 = unused_type(), T7& m7 = unused_type(), T8& m8 = unused_type())
