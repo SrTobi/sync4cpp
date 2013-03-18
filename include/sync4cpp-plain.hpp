@@ -458,7 +458,7 @@ struct mutex_modifier
 	template<typename Mutex>
 	typename assignment_selector<Mutex>::type operator <<(Mutex& mutex) const
 	{
-		return assignment_selector<Mutex>::type(mutex, value);
+		return typename assignment_selector<Mutex>::type(mutex, value);
 	}
 
 	template<std::size_t Index>
