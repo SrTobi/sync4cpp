@@ -140,7 +140,7 @@ namespace traits {
 		struct guard
 		{
 			typedef void guard_type;
-			typedef void mapping;
+			typedef std::tuple<> mapping;
 		};
 	};
 
@@ -347,6 +347,8 @@ namespace detail {
 
 		typedef typename entry_type::template guard<Modifier> guard_entry;
 		typedef bool_base<!std::is_void<typename guard_entry::guard_type>::value> found_guard;
+
+		static_assert(!std::is_void<typename guard_entry::mapping>::value, "mapping can not be void!");
 
 		//static_assert(found_guard::value, "Guard not found!");
 		typedef typename std::conditional
@@ -585,7 +587,7 @@ namespace traits {
 				struct guard					\
 				{								\
 					typedef void guard_type;	\
-					typedef void mapping;		\
+					typedef std::tuple<> mapping;		\
 				};								\
 			};									\
 		}}
