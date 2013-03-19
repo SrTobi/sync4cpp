@@ -15,10 +15,25 @@ namespace detail {
 
 	template<typename InternalMutex, typename ValueType>
 	struct synchronized_decor
-		: public decor<synchronized_decor<InternalMutex, ValueType> >
+		: public sync4cpp::decor<synchronized_decor<InternalMutex, ValueType> >
 	{
 		typedef synchronized<ValueType, InternalMutex> sync_type;
 
+
+		synchronized_decor()
+		{
+		}
+
+		synchronized_decor(const InternalMutex&& mutex)
+			: mMutex(mutex)
+		{
+		}
+
+	private:
+		syncable<InternalMutex> mMutex;
+
+
+	/*************** decor stuff *****************/
 	private:
 		static ValueType& ExtractValue(sync_type& mutex)
 		{
@@ -34,7 +49,7 @@ namespace detail {
 				: public base_type
 			{
 				Wrapper(const assignment<Mutex, Modifier>& as)
-					: base_type(as[(syncable<InternalMutex>&)as.mutex()])
+					: base_type(as[as.mutex().mMutex])
 					, value(ExtractValue(as.mutex()))
 				{}
 
@@ -48,7 +63,7 @@ namespace detail {
 template<typename ValueType, typename Mutex>
 class synchronized
 	: public detail::synchronized_decor<Mutex, ValueType>
-	, public syncable<Mutex>
+	//, /*public*/ syncable<Mutex>
 {
 	template<typename InternalMutex_, typename ValueType_>
 	friend struct detail::synchronized_decor;
@@ -58,7 +73,7 @@ class synchronized
 
 	}*/
 public:
-	typedef syncable<Mutex>		base_type;
+	typedef detail::synchronized_decor<Mutex, ValueType> base_type;
 	typedef Mutex				mutex_type;
 	typedef ValueType			value_type;
 
