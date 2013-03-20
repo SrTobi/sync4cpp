@@ -24,7 +24,7 @@ namespace detail {
 		{
 		}
 
-		synchronized_decor(const InternalMutex&& mutex)
+		synchronized_decor(const InternalMutex& mutex)
 			: mMutex(mutex)
 		{
 		}
@@ -88,8 +88,8 @@ public:
 		: base_type(mutex)
 	{}
 
-	inline synchronized(const value_type& value, const mutex_type&& mutex)
-		: base_type(std::move(mutex))
+	inline synchronized(const value_type& value, const mutex_type& mutex)
+		: base_type(mutex)
 		, mValue(value)
 	{}
 
@@ -103,6 +103,6 @@ private:
 }
 
 
-#define SYNC4CPP_SYNCBIND(_var, _mutex) auto SYNC4CPP_LOCK_NAME(_sync_guard_named_##_var##_in_) = SYNC4CPP_SYNCGUARD(_mutex); auto& _var = SYNC4CPP_LOCK_NAME(_sync_guard_named_##_var##_in_).value;
+#define SYNC4CPP_SYNCBIND(_var, _mutex) SYNC4CPP_SYNCGUARD(SYNC4CPP_LOCK_NAME(_sync_guard_named_##_var##_in_), _mutex); auto& _var = SYNC4CPP_LOCK_NAME(_sync_guard_named_##_var##_in_).value;
 #define SYNC4CPP_SYNCUSE(_mutex)		SYNC4CPP_SYNCBIND(_mutex, _mutex);
 #endif

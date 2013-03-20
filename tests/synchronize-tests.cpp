@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(is_lock_test)
 		IsLockMockMutex mutex(mock);
 
 		{
-			auto guard = SYNC4CPP_SYNCGUARD(IsLockModifier(true) << mutex);
+			SYNC4CPP_SYNCGUARD(guard, IsLockModifier(true) << mutex);
 			BOOST_CHECK(sync4cpp::is_locked(guard) == true);
 			mock.expect(LockedAccess);
 		}
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(is_lock_test)
 		IsLockMockMutex mutex(mock);
 
 		{
-			auto guard = SYNC4CPP_SYNCGUARD(IsLockModifier(false) << mutex);
+			SYNC4CPP_SYNCGUARD(guard, IsLockModifier(false) << mutex);
 			BOOST_CHECK(sync4cpp::is_locked(guard) == false);
 			mock.expect(LockedAccess);
 		}

@@ -12,22 +12,23 @@ namespace detail {
 	template<typename T>
 	struct def
 	{
-		inline operator T() const { throw "You forgot to give an argument";}
+		inline static T& Inst() { throw "You forgot to give an argument"; }
 	};
 	template<>
 	struct def<unused_type>
 	{
-		unused_type unused;
-		inline operator unused_type&() { return unused; }
+		inline static unused_type& Inst() { static unused_type uused; return uused; }
 	};
+
+	static unused_type& UInst() { static unused_type uused; return uused; }
 
 	template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
 	struct GuardArray
 	{
 		
 
-		GuardArray(	T1& m1, T2& m2 = unused_type(), T3& m3 = unused_type(), T4& m4 = unused_type(),
-					T5& m5 = unused_type(), T6& m6 = unused_type(), T7& m7 = unused_type(), T8& m8 = unused_type())
+		GuardArray(	T1& m1, T2& m2 = UInst(), T3& m3 = UInst(), T4& m4 = UInst(),
+					T5& m5 = UInst(), T6& m6 = UInst(), T7& m7 = UInst(), T8& m8 = UInst())
 			: guard1(m1)
 			, guard2(m2)
 			, guard3(m3)
@@ -67,8 +68,7 @@ namespace detail {
 }
 }
 
-#define SYNC4CPP_GUARDARRAY(...)	decltype(sync4cpp::detail::GetGuardType(__VA_ARGS__, sync4cpp::detail::unused_type(), sync4cpp::detail::unused_type(), sync4cpp::detail::unused_type(), sync4cpp::detail::unused_type(), sync4cpp::detail::unused_type(), sync4cpp::detail::unused_type(), sync4cpp::detail::unused_type(), sync4cpp::detail::unused_type()))(__VA_ARGS__)
-#define SYNC4CPP_SYNCHERE(...)		auto SYNC4CPP_LOCK_NAME(_lockarray_in_line_) = SYNC4CPP_GUARDARRAY(__VA_ARGS__);
+#define SYNC4CPP_SYNCHERE(...)	decltype(sync4cpp::detail::GetGuardType(__VA_ARGS__, sync4cpp::detail::UInst(), sync4cpp::detail::UInst(), sync4cpp::detail::UInst(), sync4cpp::detail::UInst(), sync4cpp::detail::UInst(), sync4cpp::detail::UInst(), sync4cpp::detail::UInst(), sync4cpp::detail::UInst())) SYNC4CPP_LOCK_NAME(_lockarray_in_line_)(__VA_ARGS__);
 #define SYNC4CPP_SYNCHRONIZE(...)	for(SYNC4CPP_SYNCHERE(__VA_ARGS__) !SYNC4CPP_LOCK_NAME(_lockarray_in_line_).done; SYNC4CPP_LOCK_NAME(_lockarray_in_line_).done = true)
 
 

@@ -80,7 +80,7 @@ int main()
 	//static_assert(std::is_same<typename sync4cpp::traits::mutex_registry<test*>::template guard<sync4cpp::exclusive>::guard_type, test_guard>::value, "!!!!!!!!!!!!!!!!!!!!!!!");
 	hallo mutex;
 	{
-		auto guard = SYNC4CPP_SYNCGUARD(synced);
+		SYNC4CPP_SYNCGUARD(guard, synced);
 
 		cout << guard.value;
 	}
