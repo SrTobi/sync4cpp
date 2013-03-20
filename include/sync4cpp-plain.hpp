@@ -224,7 +224,7 @@ namespace detail {
 		}
 	};
 
-	template<typename Assignment, typename Guard, typename Mapping, int ParamCount = std::tuple_size<Mapping>::value>
+	template<typename Assignment, typename Guard, typename Mapping, size_t ParamCount = std::tuple_size<Mapping>::value>
 	struct assignment_mapping_wrapper_guard
 	{
 		static_assert(sizeof(Assignment) != sizeof(Assignment), "Invalid param count on an assignment!");
@@ -236,7 +236,6 @@ namespace detail {
 	{																							\
 		typedef Guard native_guard;																\
 		assignment_mapping_wrapper_guard(const Assignment& as) : native_guard(__VA_ARGS__){}	\
-		native_guard& as_native_guard() { return *this; }										\
 		const native_guard& as_native_guard() const { return *this; }							\
 	};	
 #define MAPPING_GET(_index) get_from_mapping_impl<typename std::tuple_element<_index, Mapping>::type>::get(as)
@@ -251,13 +250,13 @@ namespace detail {
 #undef MAKE_ASSIGNMENT_MAPPING_WRAPPER_GUARD_WITH_N_PARAMS
 
 	template<typename Guard>
-	static bool is_locked_impl(const Guard& guard)
+	bool is_locked_impl(const Guard& guard)
 	{
 		return traits::is_locked(guard);
 	}
 
 	template<typename Assignment, typename Guard, typename Mapping, size_t Count>
-	static bool is_locked_impl(const assignment_mapping_wrapper_guard<Assignment, Guard, Mapping, Count>& guard)
+	bool is_locked_impl(const assignment_mapping_wrapper_guard<Assignment, Guard, Mapping, Count>& guard)
 	{
 		return is_locked_impl(guard.as_native_guard());
 	}

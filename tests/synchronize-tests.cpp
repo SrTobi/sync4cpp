@@ -362,7 +362,8 @@ public:
 
 namespace sync4cpp {namespace traits {
 
-	static bool is_locked(const IsLockMockGuard& guard)
+	template<>
+	bool is_locked(const IsLockMockGuard& guard)
 	{
 		return guard.locked;
 	}
