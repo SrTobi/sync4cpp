@@ -9,16 +9,6 @@
 
 namespace sync4cpp {
 namespace detail {
-	template<typename T>
-	struct def
-	{
-		inline static T& Inst() { throw "You forgot to give an argument"; }
-	};
-	template<>
-	struct def<unused_type>
-	{
-		inline static unused_type& Inst() { static unused_type uused; return uused; }
-	};
 
 	template<typename Type>
 	struct make_assignment_const_ref
