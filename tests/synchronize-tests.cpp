@@ -360,15 +360,11 @@ public:
 	bool locked;
 };
 
-namespace sync4cpp {namespace traits {
 
-	template<>
-	bool is_locked(const IsLockMockGuard& guard)
-	{
-		return guard.locked;
-	}
-
-}}
+SYNC4CPP_MAKE_IS_LOCKED(IsLockMockGuard, guard)
+{
+	return guard.locked;
+}
 
 typedef sync4cpp::mutex_modifier<struct IsLockModifierTag, bool> IsLockModifier;
 

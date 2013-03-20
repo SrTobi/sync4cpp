@@ -619,6 +619,14 @@ namespace traits {
 			};															\
 		}}
 
+#define SYNC4CPP_MAKE_IS_LOCKED(_guardtype, _name)	\
+		namespace sync4cpp { namespace traits {		\
+			template<>								\
+			bool is_locked(const _guardtype&);		\
+		}}											\
+		template<>									\
+		bool sync4cpp::traits::is_locked(const _guardtype& _name)
+
 SYNC4CPP_REGISTER_MUTEX(sync4cpp::detail::unused_type);
 SYNC4CPP_REGISTER_GUARD(sync4cpp::detail::unused_type, sync4cpp::exclusive, sync4cpp::detail::unused_guard);
 SYNC4CPP_SET_DEFAULT_GUARD(sync4cpp::detail::unused_type, sync4cpp::exclusive);
